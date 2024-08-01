@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Out of Tune Note Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        button { margin: 10px; padding: 5px 10px; }
+    </style>
+</head>
+<body>
+    <h1>Out of Tune Note Game</h1>
+    <button id="playMelody">Play Melody</button>
+    <div>
+        <label for="noteGuess">Which note is out of tune (1-5)?</label>
+        <input type="number" id="noteGuess" min="1" max="5">
+    </div>
+    <div>
+        <label for="centsGuess">How many cents off (multiple of 5)?</label>
+        <input type="number" id="centsGuess" step="5">
+    </div>
+    <button id="submitGuess">Submit Guess</button>
+    <p id="result"></p>
+
+    <script>
+        const synth = new Tone.Synth().toDestination();
+        const majorScale = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+        let outOfTuneNote, outOfTuneCents;
+
+        function generateMelody() {
+            const melody = [];
+            for (let i = 0; i < 5; i++) {
+                melody.push(majorScale[Math.floor(Math.random() * majorScale.length)]);
+            }
+            outOfTuneNote = Math.floor(Math.random() * 5);
+            outOfTuneCents = (Math.floor(Math.random() * 8) + 1) * 5 * (Math.random() < 0.5 ? -1 : 1);
+            return melody;
+        }
+
+        function playMelody() {
+            const melody = generateMelody();
+            const now = Tone.now();
+            melody.forEach((note, index) => {
+                if (index === outOfTuneNote) {
+                    synth.triggerAttackRelease(Tone.Frequency(note).transpose(outOfTuneCents / 100), '4n', now + index * 0.5);
+                } else {
+                    synth.triggerAttackRelease(note, '4n', now + index * 0.5);
+                }
+            });
+        }
+
+        document.getElementById('playMelody').addEventListener('click', playMelody);
+
+        document.getElementById('submitGuess').addEventListener('click', () => {
+            const noteGuess = parseInt(document.getElementById('noteGuess').value) - 1;
+            const centsGuess = parseInt(document.getElementById('centsGuess').value);
+            
+            const noteDistance = Math.abs(noteGuess - outOfTuneNote);
+            const centsDistance = Math.abs(centsGuess - outOfTuneCents);
+            
+            const score = 100 - (noteDistance * 10 + centsDistance);
+            
+            document.getElementById('result').textContent = `Your score: ${Math.max(0, score)}. The out of tune note was #${outOfTuneNote + 1}, ${outOfTuneCents} cents off.`;
+        });
+    </script>
+</body>
+</html>

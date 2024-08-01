@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Additive Synthesizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .controls div {
+            margin-bottom: 10px;
+        }
+        .harmonics-controls {
+            display: flex;
+            flex-direction: column;
+        }
+        .harmonic-control {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background: #fff;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div>
+            <button onclick="changeHarmonics(-1)">-</button>
+            <span id="harmonic-count">5</span>
+            <button onclick="changeHarmonics(1)">+</button>
+        </div>
+        <div class="harmonics-controls" id="harmonics-controls"></div>
+        <button onclick="startSynth()">Start</button>
+        <button onclick="stopSynth()">Stop</button>
+    </div>
+    <canvas id="oscilloscope" width="600" height="200"></canvas>
+
+    <script>
+        let audioCtx;
+        let oscillator;
+        let gainNode;
+        let analyser;
+        let dataArray;
+        let bufferLength;
+        let animationId;
+        
+        const harmonicsControls = document.getElementById('harmonics-controls');
+        const harmonicCountSpan = document.getElementById('harmonic-count');
+        let numHarmonics = parseInt(harmonicCountSpan.textContent, 10);
+
+        function changeHarmonics(delta) {
+            numHarmonics = Math.min(Math.max(numHarmonics + delta, 1), 10);
+            harmonicCountSpan.textContent = numHarmonics;
+            updateHarmonicsControls();
+        }
+        
+        function updateHarmonicsControls() {
+            harmonicsControls.innerHTML = '';
+            
+            for (let i = 1; i <= numHarmonics; i++) {
+                const div = document.createElement('div');
+                div.className = 'harmonic-control';
+
+                const label = document.createElement('label');
+                label.textContent = `Harmonic ${i}`;
+                div.appendChild(label);
+                
+                const ampLabel = document.createElement('label');
+                ampLabel.textContent = 'Amplitude:';
+                div.appendChild(ampLabel);
+
+                const ampInput = document.createElement('input');
+                ampInput.type = 'range';
+                ampInput.step = '0.01';
+                ampInput.min = '0';
+                ampInput.max = '1';
+                ampInput.value = '0.5';
+                ampInput.id = `amp${i}`;
+                div.appendChild(ampInput);
+                
+                const phaseLabel = document.createElement('label');
+                phaseLabel.textContent = 'Phase:';
+                div.appendChild(phaseLabel);
+
+                const phaseInput = document.createElement('input');
+                phaseInput.type = 'range';
+                phaseInput.step = '0.01';
+                phaseInput.min = '0';
+                phaseInput.max = '6.28'; // Approximately 2 * Math.PI
+                phaseInput.value = '0';
+                phaseInput.id = `phase${i}`;
+                div.appendChild(phaseInput);
+                
+                harmonicsControls.appendChild(div);
+            }
+        }
+        
+        function startSynth() {
+            if (audioCtx) {
+                stopSynth();
+            }
+            
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            oscillator = audioCtx.createOscillator();
+            gainNode = audioCtx.createGain();
+            analyser = audioCtx.createAnalyser();
+            
+            const real = new Float32Array(numHarmonics + 1);
+            const imag = new Float32Array(numHarmonics + 1);
+            
+            for (let i = 1; i <= numHarmonics; i++) {
+                const amp = parseFloat(document.getElementById(`amp${i}`).value);
+                const phase = parseFloat(document.getElementById(`phase${i}`).value);
+                real[i] = amp * Math.cos(phase);
+                imag[i] = amp * Math.sin(phase);
+            }
+            
+            const wave = audioCtx.createPeriodicWave(real, imag);
+            oscillator.setPeriodicWave(wave);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.connect(analyser);
+            
+            analyser.fftSize = 2048;
+            bufferLength = analyser.frequencyBinCount;
+            dataArray = new Uint8Array(bufferLength);
+            
+            oscillator.start();
+            
+            drawOscilloscope();
+        }
+        
+        function stopSynth() {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator.disconnect();
+            }
+            if (audioCtx) {
+                audioCtx.close();
+            }
+            cancelAnimationFrame(animationId);
+        }
+        
+        function drawOscilloscope() {
+            const canvas = document.getElementById('oscilloscope');
+            const canvasCtx = canvas.getContext('2d');
+            
+            function draw() {
+                animationId = requestAnimationFrame(draw);
+                
+                analyser.getByteTimeDomainData(dataArray);
+                
+                canvasCtx.fillStyle = 'rgb(200, 200, 200)';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                canvasCtx.lineWidth = 2;
+                canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+                
+                canvasCtx.beginPath();
+                
+                const sliceWidth = canvas.width * 1.0 / bufferLength;
+                let x = 0;
+                
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = v * canvas.height / 2;
+                    
+                    if (i === 0) {
+                        canvasCtx.moveTo(x, y);
+                    } else {
+                        canvasCtx.lineTo(x, y);
+                    }
+                    
+                    x += sliceWidth;
+                }
+                
+                canvasCtx.lineTo(canvas.width, canvas.height / 2);
+                canvasCtx.stroke();
+            }
+            
+            draw();
+        }
+        
+        updateHarmonicsControls();
+    </script>
+</body>
+</html>

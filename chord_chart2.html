@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chord Chart Generator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      select,
+      input,
+      button {
+        font-size: 16px;
+        margin: 10px 0;
+      }
+      #chart {
+        font-family: monospace;
+        white-space: pre;
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 5px;
+      }
+      .input-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .input-group label {
+        margin-right: 10px;
+        min-width: 60px;
+      }
+      .input-group input {
+        flex-grow: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chord Chart Generator</h1>
+    <div class="input-group">
+      <label for="chordSelect">Chord:</label>
+      <select id="chordSelect" onchange="updateChordInput()">
+        <option value="major">Major</option>
+        <option value="minor">Minor</option>
+        <option value="dominantSeven">Dominant Seven</option>
+        <option value="minorSeven">Minor Seven</option>
+        <option value="majorSeven">Major Seven</option>
+        <option value="minorMajorSeven">Minor Major Seven</option>
+        <option value="dominantSevenSharpNine">
+          Dominant Seven Sharp Nine
+        </option>
+        <option value="majorSix">Major Six</option>
+        <option value="minorSevenFlatFive">Minor Seven Flat Five</option>
+        <option value="minorSix">Minor Six</option>
+        <option value="susTwo">Sus Two</option>
+        <option value="susFour">Sus Four</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label for="chordInput">Intervals:</label>
+      <input
+        type="text"
+        id="chordInput"
+        placeholder="Enter intervals (e.g., 0 4 7)"
+        oninput="generateChart()"
+      />
+    </div>
+    <div class="input-group">
+      <label for="instrumentSelect">Instrument:</label>
+      <select id="instrumentSelect" onchange="updateTuningInput()">
+        <option value="guitar">Guitar</option>
+        <option value="ukulele">Ukulele</option>
+        <option value="mandolin">Mandolin</option>
+        <option value="bass">Bass</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label for="tuningInput">Tuning:</label>
+      <input
+        type="text"
+        id="tuningInput"
+        placeholder="Enter tuning (e.g., E A D G B E)"
+        oninput="generateChart()"
+      />
+    </div>
+    <div id="chart"></div>
+
+    <script>
+      const notes = [
+        "Db",
+        "D ",
+        "Eb",
+        "E ",
+        "F ",
+        "Gb",
+        "G ",
+        "Ab",
+        "A ",
+        "Bb",
+        "B ",
+        "C ",
+      ];
+      const intervals = [
+        " 1",
+        "b2",
+        " 2",
+        "b3",
+        " 3",
+        " 4",
+        "b5",
+        " 5",
+        "b6",
+        " 6",
+        "b7",
+        " 7",
+      ];
+
+      const instruments = {
+        guitar: ["E ", "A ", "D ", "G ", "B ", "E "],
+        ukulele: ["G ", "C ", "E ", "A "],
+        mandolin: ["G ", "D ", "A ", "E "],
+        bass: ["E ", "A ", "D ", "G "],
+      };
+
+      const chords = {
+        major: [0, 4, 7],
+        minor: [0, 3, 7],
+        dominantSeven: [0, 4, 7, 10],
+        minorSeven: [0, 3, 7, 10],
+        majorSeven: [0, 4, 7, 11],
+        minorMajorSeven: [0, 3, 7, 11],
+        dominantSevenSharpNine: [0, 3, 4, 7, 10],
+        majorSix: [0, 4, 7, 9],
+        minorSevenFlatFive: [0, 3, 6, 10],
+        minorSix: [0, 3, 7, 9],
+        susTwo: [0, 2, 7],
+        susFour: [0, 5, 7],
+      };
+
+      function createChart(chord, tuning) {
+        let result = "    ";
+        for (let n of notes.slice().reverse()) {
+          result += n + " ";
+        }
+        result += "\n";
+
+        for (let n of tuning.slice().reverse()) {
+          result += n + " ";
+          for (let i = 0; i < 24; i++) {
+            let index = (i + notes.indexOf(n) + 1) % 12;
+            result += (chord.includes(index) ? intervals[index] : "  ") + "|";
+          }
+          result += "\n";
+        }
+
+        return result;
+      }
+
+      function generateChart() {
+        const chordInput = document.getElementById("chordInput").value;
+        const tuningInput = document.getElementById("tuningInput").value;
+        const chord = chordInput.split(" ").map(Number);
+        const tuning = tuningInput
+          .split(" ")
+          .map((note) => note.padEnd(2, " "));
+        const chartDiv = document.getElementById("chart");
+        chartDiv.textContent = createChart(chord, tuning);
+      }
+
+      function updateChordInput() {
+        const selectedChord = document.getElementById("chordSelect").value;
+        const chordInput = document.getElementById("chordInput");
+        if (selectedChord !== "custom") {
+          chordInput.value = chords[selectedChord].join(" ");
+        }
+        generateChart();
+      }
+
+      function updateTuningInput() {
+        const selectedInstrument =
+          document.getElementById("instrumentSelect").value;
+        const tuningInput = document.getElementById("tuningInput");
+        if (selectedInstrument !== "custom") {
+          tuningInput.value = instruments[selectedInstrument].join(" ");
+        }
+        generateChart();
+      }
+
+      // Initialize with default values
+      updateChordInput();
+      updateTuningInput();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maxwell's Demon Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const ballRadius = 10;
+        const ballSpeed = 2;
+        const numBalls = 20;
+        const gateWidth = 60;
+        const gateY = canvas.height / 2 - gateWidth / 2;
+
+        let balls = [];
+        let isGateOpen = false;
+
+        class Ball {
+            constructor(x, y, dx, dy, color) {
+                this.x = x;
+                this.y = y;
+                this.dx = dx;
+                this.dy = dy;
+                this.color = color;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, ballRadius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            update() {
+                if (this.x + this.dx > canvas.width - ballRadius || this.x + this.dx < ballRadius) {
+                    this.dx = -this.dx;
+                }
+                if (this.y + this.dy > canvas.height - ballRadius || this.y + this.dy < ballRadius) {
+                    this.dy = -this.dy;
+                }
+
+                if (!isGateOpen && Math.abs(this.x - canvas.width / 2) < ballRadius) {
+                    if (this.y < gateY || this.y > gateY + gateWidth) {
+                        this.dx = -this.dx;
+                    }
+                }
+
+                this.x += this.dx;
+                this.y += this.dy;
+            }
+        }
+
+        function init() {
+            balls = [];
+            for (let i = 0; i < numBalls; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const dx = (Math.random() - 0.5) * ballSpeed;
+                const dy = (Math.random() - 0.5) * ballSpeed;
+                const color = Math.random() < 0.5 ? 'red' : 'blue';
+                balls.push(new Ball(x, y, dx, dy, color));
+            }
+        }
+
+        function drawGate() {
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, gateY);
+            ctx.moveTo(canvas.width / 2, gateY + gateWidth);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawGate();
+
+            balls.forEach(ball => {
+                ball.draw();
+                ball.update();
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        canvas.addEventListener('mousedown', () => {
+            isGateOpen = true;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isGateOpen = false;
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isGateOpen = true;
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isGateOpen = false;
+        });
+
+        init();
+        draw();
+    </script>
+</body>
+</html>

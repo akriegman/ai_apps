@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Animation</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: black;
+        }
+
+        .loading-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            clip: rect(0px, 100px, 200px, 0px);
+        }
+
+        .red, .blue, .green {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .red {
+            background: red;
+            animation: rotate 3s linear infinite;
+        }
+
+        .blue {
+            background: blue;
+            animation: rotate 6s linear infinite;
+        }
+
+        .green {
+            background: green;
+            animation: rotate 9s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="circle">
+            <div class="red"></div>
+        </div>
+        <div class="circle">
+            <div class="blue"></div>
+        </div>
+        <div class="circle">
+            <div class="green"></div>
+        </div>
+    </div>
+</body>
+</html>

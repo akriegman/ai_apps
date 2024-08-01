@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relative Pitch Training</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Relative Pitch Training</h1>
+    <button id="playNotes">Play Notes</button>
+    <button id="showAnswer">Show Answer</button>
+    <p id="result"></p>
+
+    <script>
+        const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const INTERVALS = {
+            1: 'Minor Second',
+            2: 'Major Second',
+            3: 'Minor Third',
+            4: 'Major Third',
+            5: 'Perfect Fourth',
+            6: 'Tritone',
+            7: 'Perfect Fifth',
+            8: 'Minor Sixth',
+            9: 'Major Sixth',
+            10: 'Minor Seventh',
+            11: 'Major Seventh',
+            12: 'Octave'
+        };
+
+        let firstNoteIndex, secondNoteIndex;
+
+        function playNote(freq, duration) {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function getFrequency(note) {
+            const A4 = 440;
+            return A4 * Math.pow(2, (note - 9) / 12);
+        }
+
+        document.getElementById('playNotes').addEventListener('click', () => {
+            firstNoteIndex = Math.floor(Math.random() * 12);
+            const interval = Math.floor(Math.random() * 12) + 1;
+            secondNoteIndex = (firstNoteIndex + interval) % 12;
+
+            const firstFreq = getFrequency(firstNoteIndex);
+            const secondFreq = getFrequency(secondNoteIndex);
+
+            playNote(firstFreq, 0.5);
+            setTimeout(() => playNote(secondFreq, 0.5), 700);
+
+            document.getElementById('result').textContent = '';
+        });
+
+        document.getElementById('showAnswer').addEventListener('click', () => {
+            const interval = (secondNoteIndex - firstNoteIndex + 12) % 12;
+            const intervalName = INTERVALS[interval];
+            document.getElementById('result').textContent = `The interval was: ${intervalName}`;
+        });
+    </script>
+</body>
+</html>

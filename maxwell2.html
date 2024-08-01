@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maxwell's Demon Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            display: block;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let canvasSize, chamberSize, gateWidth, ballRadius, ballSpeed, numBalls;
+
+        function setupCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvasSize = Math.min(canvas.width, canvas.height);
+            chamberSize = canvasSize;
+            gateWidth = chamberSize / 5;
+            ballRadius = chamberSize / 40;
+            ballSpeed = chamberSize / 200;
+            numBalls = 20;
+        }
+
+        setupCanvas();
+        window.addEventListener('resize', () => {
+            setupCanvas();
+            init();
+        });
+
+        let balls = [];
+        let isGateOpen = false;
+
+        class Ball {
+            constructor(x, y, dx, dy, color) {
+                this.x = x;
+                this.y = y;
+                this.dx = dx;
+                this.dy = dy;
+                this.color = color;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, ballRadius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            update() {
+                if (this.x + this.dx > chamberSize - ballRadius || this.x + this.dx < ballRadius) {
+                    this.dx = -this.dx;
+                }
+                if (this.y + this.dy > canvas.height - ballRadius || this.y + this.dy < ballRadius) {
+                    this.dy = -this.dy;
+                }
+
+                if (!isGateOpen && Math.abs(this.y - chamberSize) < ballRadius) {
+                    if (this.x < (canvas.width - gateWidth) / 2 || this.x > (canvas.width + gateWidth) / 2) {
+                        this.dy = -this.dy;
+                    }
+                }
+
+                this.x += this.dx;
+                this.y += this.dy;
+            }
+        }
+
+        function init() {
+            balls = [];
+            for (let i = 0; i < numBalls; i++) {
+                const x = Math.random() * chamberSize;
+                const y = Math.random() * canvas.height;
+                const dx = (Math.random() - 0.5) * ballSpeed;
+                const dy = (Math.random() - 0.5) * ballSpeed;
+                const color = Math.random() < 0.5 ? 'red' : 'blue';
+                balls.push(new Ball(x, y, dx, dy, color));
+            }
+        }
+
+        function drawGate() {
+            ctx.beginPath();
+            ctx.moveTo(0, chamberSize);
+            ctx.lineTo((canvas.width - gateWidth) / 2, chamberSize);
+            ctx.moveTo((canvas.width + gateWidth) / 2, chamberSize);
+            ctx.lineTo(canvas.width, chamberSize);
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawGate();
+
+            balls.forEach(ball => {
+                ball.draw();
+                ball.update();
+            });
+
+            requestAnimationFrame(draw);
+        }
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isGateOpen = true;
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isGateOpen = false;
+        });
+
+        init();
+        draw();
+    </script>
+</body>
+</html>

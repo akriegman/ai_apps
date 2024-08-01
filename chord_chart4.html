@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- (Head content remains the same) -->
+  </head>
+  <body>
+    <!-- (Body content remains the same) -->
+
+    <script>
+      const notes = [
+        "C ",
+        "Db",
+        "D ",
+        "Eb",
+        "E ",
+        "F ",
+        "Gb",
+        "G ",
+        "Ab",
+        "A ",
+        "Bb",
+        "B ",
+      ];
+      const sharpNotes = [
+        "C ",
+        "C#",
+        "D ",
+        "D#",
+        "E ",
+        "F ",
+        "F#",
+        "G ",
+        "G#",
+        "A ",
+        "A#",
+        "B ",
+      ];
+      const intervals = [
+        " 1",
+        "b2",
+        " 2",
+        "b3",
+        " 3",
+        " 4",
+        "b5",
+        " 5",
+        "b6",
+        " 6",
+        "b7",
+        " 7",
+      ];
+
+      // (Other constants remain the same)
+
+      function createChart(chord, tuning) {
+        // (Function remains the same)
+      }
+
+      function generateChart() {
+        const chordInput = document.getElementById("chordInput").value;
+        const tuningInput = document.getElementById("tuningInput").value;
+        const chord = chordInput.trim().split(/\s+/).map(Number);
+        const tuning = tuningInput.trim().split(/\s+/).map(canonicalizeNote);
+        const chartDiv = document.getElementById("chart");
+        chartDiv.textContent = createChart(chord, tuning);
+        updateExplanation();
+      }
+
+      function canonicalizeNote(note) {
+        note = note.trim().toUpperCase();
+
+        // Handle sharps
+        if (note.endsWith("#")) {
+          let index = sharpNotes.indexOf(note.padEnd(2, " "));
+          return index !== -1 ? sharpNotes[index] : note.slice(0, 2);
+        }
+
+        // Handle flats and natural notes
+        let index = notes.indexOf(note.padEnd(2, " "));
+        return index !== -1 ? notes[index] : note.slice(0, 2);
+      }
+
+      function updateChordInput() {
+        // (Function remains the same)
+      }
+
+      function updateTuningInput() {
+        // (Function remains the same)
+      }
+
+      function updateExplanation() {
+        // (Function remains the same)
+      }
+
+      // Initialize with default values
+      updateChordInput();
+      updateTuningInput();
+    </script>
+  </body>
+</html>

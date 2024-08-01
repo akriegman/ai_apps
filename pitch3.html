@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relative Pitch Training</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Relative Pitch Training</h1>
+    <button id="playNotes">Play Notes</button>
+    <button id="showAnswer">Show Answer</button>
+    <p id="result"></p>
+
+    <script>
+        const BASE_NOTE = 440;  // Frequency of A4
+        const BASE_NOTE_NAME = 'A4';
+
+        function playNote(freq, duration) {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function getFrequency(baseFreq, cents) {
+            return baseFreq * Math.pow(2, cents / 1200);
+        }
+
+        document.getElementById('playNotes').addEventListener('click', () => {
+            const intervalCents = (Math.floor(Math.random() * 100) - 50) * 10; // Random interval between -500 and +500 cents
+            const secondNoteFreq = getFrequency(BASE_NOTE, intervalCents);
+
+            playNote(BASE_NOTE, 0.5);
+            setTimeout(() => playNote(secondNoteFreq, 0.5), 700);
+
+            document.getElementById('result').textContent = '';
+            document.getElementById('result').dataset.interval = intervalCents;
+        });
+
+        document.getElementById('showAnswer').addEventListener('click', () => {
+            const intervalCents = document.getElementById('result').dataset.interval;
+            document.getElementById('result').textContent = `The interval was: ${intervalCents} cents`;
+        });
+    </script>
+</body>
+</html>

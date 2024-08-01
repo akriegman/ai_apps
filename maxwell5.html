@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maxwell's Demon Game with p5.js</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://molleindustria.github.io/p5.play/lib/p5.play.js"></script>
+</head>
+<body>
+    <script>
+        let balls;
+        let walls;
+        let gate;
+        let gateOpen = false;
+        let thickness = 8;
+        let gateWidth = 100;
+        let ballRadius = 10;
+        let numBalls = 50;
+        let charVel = 2;
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            
+            balls = new Group();
+            walls = new Group();
+            
+            // Create walls
+            walls.add(createSprite(width/2, thickness/2, width, thickness));
+            walls.add(createSprite(width/2, height-thickness/2, width, thickness));
+            walls.add(createSprite(thickness/2, height/2, thickness, height));
+            walls.add(createSprite(width-thickness/2, height/2, thickness, height));
+            walls.add(createSprite(width/4 - gateWidth/4, height/2, width/2 - gateWidth/2, thickness));
+            walls.add(createSprite(width*3/4 + gateWidth/4, height/2, width/2 - gateWidth/2, thickness));
+            
+            walls.forEach(wall => {
+                wall.immovable = true;
+                wall.shapeColor = color(0);
+            });
+            walls[0].shapeColor = 'red';
+            walls[1].shapeColor = 'blue';
+
+            // Create gate
+            gate = createSprite(width/2, height/2, gateWidth, thickness);
+            gate.immovable = true;
+            gate.shapeColor = color(128);
+
+            // Create balls
+            for (let i = 0; i < numBalls; i++) {
+                let ball = createSprite(random(width), random(height/2), 0, 0);
+                ball.setCollider('circle', 0, 0, ballRadius);
+                ball.color = random() < 0.5 ? 'red' : 'blue';
+                ball.velocity.x = randomGaussian(0, charVel);
+                ball.velocity.y = randomGaussian(0, charVel);
+                ball.bounciness = 1; // Perfectly elastic collisions
+                balls.add(ball);
+            }
+        }
+
+        function draw() {
+            background(240);
+
+            // Handle collisions
+            balls.bounce(walls);
+            balls.bounce(balls);
+            if (!gateOpen) {
+                balls.bounce(gate);
+            }
+
+            // Draw sprites
+            drawSprites();
+
+            // Draw ball colors
+            let score = 0;
+            for (let ball of balls) {
+                fill(ball.color);
+                ellipse(ball.position.x, ball.position.y, ballRadius*2, ballRadius*2);
+                score += (ball.color == 'red' ? 1 : -1) * (ball.position.y < height/2 ? 1 : -1) / 2;
+            }
+
+            fill('black');
+            text('score: ' + score, thickness + 1, thickness * 2);
+        }
+
+        function touchStarted() {
+            gateOpen = true;
+            gate.visible = false;
+            return false;
+        }
+
+        function touchEnded() {
+            gateOpen = false;
+            gate.visible = true;
+            return false;
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+    </script>
+</body>
+</html>

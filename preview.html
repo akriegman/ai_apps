@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Editor with Live Preview</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        textarea {
+            width: 100%;
+            height: 40%;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+        }
+        iframe {
+            width: 100%;
+            height: 60%;
+            border: none;
+        }
+        button {
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <textarea id="htmlInput" placeholder="Enter HTML content here..."></textarea>
+    <button onclick="saveToFile()">Save to HTML File</button>
+    <iframe id="preview"></iframe>
+
+    <script>
+        const textarea = document.getElementById('htmlInput');
+        const iframe = document.getElementById('preview');
+
+        textarea.addEventListener('input', () => {
+            updatePreview();
+        });
+
+        function updatePreview() {
+            const htmlContent = textarea.value;
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(htmlContent);
+            iframeDoc.close();
+        }
+
+        function saveToFile() {
+            const htmlContent = textarea.value;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'content.html';
+            a.click();
+        }
+
+        // Initialize preview with initial content
+        updatePreview();
+    </script>
+</body>
+</html>
